@@ -1,0 +1,8 @@
+tensorflow>=2.13.0
+streamlit>=1.28.0
+numpy>=1.23.0
+pillow>=9.5.0
+matplotlib>=3.7.0
+
+
+To install the requirement.txt use :  pip install -r requirements.txt
