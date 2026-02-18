@@ -1,0 +1,33 @@
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+env/
+.venv/
+venv/
+
+# macOS and editor artifacts
+.DS_Store
+.vscode/
+.idea/
+
+# Build/test/tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Model artifacts and datasets (large files)
+*.h5
+*.keras
+*.ckpt
+*.tflite
+dataset/
+
+# Logs
+*.log
+
+# Optional local config
+.env
