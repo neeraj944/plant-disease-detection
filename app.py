@@ -26,8 +26,37 @@ def load_model():
 
 model = load_model()
 
+def load_class_names(dataset_dir):
+    # Keep only class directories so hidden files like .DS_Store do not break mapping.
+    return sorted(
+        entry
+        for entry in os.listdir(dataset_dir)
+        if os.path.isdir(os.path.join(dataset_dir, entry))
+    )
+
+def format_prediction_label(raw_label):
+    normalized = raw_label.replace("___", "|")
+
+    if "|" in normalized:
+        plant, condition = normalized.split("|", 1)
+    elif normalized.lower().endswith("_healthy"):
+        plant = normalized[: -len("_healthy")]
+        condition = "healthy"
+    else:
+        plant, _, condition = normalized.partition("_")
+
+    plant_name = plant.replace("__", " ").replace("_", " ").strip().title()
+    condition_name = condition.replace("__", " ").replace("_", " ").strip().title()
+
+    if not plant_name:
+        plant_name = "Unknown"
+    if not condition_name:
+        condition_name = "Unknown"
+
+    return plant_name, condition_name
+
 # Load class names
-class_names = sorted(os.listdir(DATASET_DIR))
+class_names = load_class_names(DATASET_DIR)
 
 
 # UI
@@ -56,11 +85,21 @@ if uploaded_file is not None:
     img_array = np.expand_dims(img_array, axis=0)
 
     # Prediction
-    prediction = model.predict(img_array)
-    predicted_class = class_names[np.argmax(prediction)]
-    confidence = np.max(prediction) * 100
+    prediction = model.predict(img_array, verbose=0)
+    predicted_index = int(np.argmax(prediction, axis=1)[0])
+    confidence = float(np.max(prediction)) * 100
+
+    if predicted_index < len(class_names):
+        predicted_class = class_names[predicted_index]
+    else:
+        predicted_class = "Unknown"
+
+    plant_name, disease_name = format_prediction_label(predicted_class)
 
     st.subheader(" Prediction Result")
+    st.write(f"**Plant:** {plant_name}")
+    st.write(f"**Predicted Disease:** {disease_name}")
+    st.write(f"**Confidence:** {confidence:.2f}%")
 
     # Confidence-based decision
     if confidence < CONFIDENCE_THRESHOLD:
@@ -69,13 +108,10 @@ if uploaded_file is not None:
             "Please upload a clearer image or consult an expert."
         )
     else:
-        st.write(f"**Predicted Class:** {predicted_class}")
-        st.write(f"**Confidence:** {confidence:.2f}%")
-
-        if "healthy" in predicted_class.lower():
+        if "healthy" in disease_name.lower():
             st.success(" The plant appears to be healthy")
         else:
-            st.error("⚠️ Disease detected")
+            st.error(f"⚠️ Disease detected: {disease_name}")
 
 
 # FOOTER
